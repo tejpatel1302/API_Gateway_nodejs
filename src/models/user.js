@@ -2,6 +2,8 @@
 const {
   Model
 } = require('sequelize');
+const bcrypt = require('bcrypt');
+const { ServerConfig } = require('../config');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -26,12 +28,17 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        len: [3, 50] // To add more checks search sequelize model constraints
+        len: [3, 50]
       }
     },
   }, {
     sequelize,
     modelName: 'User',
+  });
+  // using bcrypt we cannot be able to decrypt the password but we can compare it to verify the valid user.
+  User.beforeCreate(function encrypt(user) {
+    const encryptedPassword = bcrypt.hashSync(user.password, +ServerConfig.SALT_ROUNDS);
+    user.password = encryptedPassword;
   });
   return User;
 };
